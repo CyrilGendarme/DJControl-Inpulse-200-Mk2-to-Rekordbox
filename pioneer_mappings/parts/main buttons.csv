@@ -1,0 +1,9 @@
+@file,1,PIONEER DDJ-SX,,,,,,,,,,,,
+
+#name,function,type,input,deck1,deck2,deck11,deck12,output,deck1,deck2,deck11,deck12,option,comment
+,,,,,,,,,,,,,,
+Cue,,Button,9006,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+PlayPause,,Button,9007,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+Stems,,Button,9010,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+HotCue,,Button,900F,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+Shift,Shift,Button,9004,1,2,11,12,,,,,,RO;,Shift

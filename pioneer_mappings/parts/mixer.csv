@@ -1,0 +1,21 @@
+@file,1,PIONEER DDJ-SX,,,,,,,,,,,,
+
+#name,function,type,input,deck1,deck2,deck3,deck4,output,deck1,deck2,deck3,deck4,option,comment
+,,,,,,,,,,,,,,
+
+CrossFader,,KnobSlider,B000,,,,,,,,,,Fast;,
+HeadphonesVolume,,KnobSlider,B004,,,,,,,,,,,No function assigned here
+MasterLevel,,KnobSlider,B003,,,,,,,,,,,No function assigned here
+
+HeadphoneCue,HeadphoneCue,Button,900C,1,2,11,12,,,,,,,Headphone CUE On/Off
+
+EQHigh,,KnobSlider,B005,1,2,11,12,,,,,,Fast;,EQ High
+EQMid,,KnobSlider,B004,1,2,11,12,,,,,,Fast;,EQ Mid
+EQLow,,KnobSlider,B002,1,2,11,12,,,,,,Fast;,EQ Low
+
+ChannelFader,,KnobSlider,B000,1,2,11,12,,,,,,,
+
+CFXParameterCH1,CFXParameterCH1,KnobSliderHiRes,B101,,,,,,,,,,Fast,CH1 CFX Depth
+CFXParameterCH2,CFXParameterCH2,KnobSliderHiRes,B201,,,,,,,,,,Fast,CH2 CFX Depth
+CFXParameterCH3,CFXParameterCH3,KnobSliderHiRes,BB01,,,,,,,,,,Fast,CH3 CFX Depth
+CFXParameterCH4,CFXParameterCH4,KnobSliderHiRes,BC01,,,,,,,,,,Fast,CH4 CFX Depth

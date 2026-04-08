@@ -1,35 +1,81 @@
 @file,1,PIONEER DDJ-SX,,,,,,,,,,,,
+
 #name,function,type,input,deck1,deck2,deck3,deck4,output,deck1,deck2,deck3,deck4,option,comment
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,
-JogScratch,JogScratch,JogRotate,B00A,1,2,,,,,,,,RO,Scratch
-,,,,,,,,,,,,,,
-JogSearch,JogSearch,Difference,B00A,4,5,,,,,,,,RO,Search
-JogTouch,JogTouch,JogTouch,9008,1,2,,,,,,,,RO,Touch
-JogTouch,JogTouch+Shift,JogTouch,9008,4,5,,,,,,,,RO,Touch
-,,,,,,,,,,,,,,
-WheelPitchBend,WheelPitchBend,JogRotate,B009,1,2,,,,,,,,RO,Pitch Bend
-WheelSearch,WheelSearch,JogRotate,B009,4,5,,,,,,,,RO,Pitch Bend
-,,,,,,,,,,,,,,
-TempoSlider,TempoSlider,KnobSlider,B070,1,2,,,,,,,,Fast,Tempo Control
-TempoSlider,TempoSlider+Shift,KnobSlider,B070,4,5,,,,,,,,Fast,Tempo Control
+
+JogScratch,JogScratch,JogRotate,B00A,1,2,11,12,,,,,,RO,Scratch
+JogSearch,JogSearch,Difference,B00A,4,5,14,15,,,,,,RO,Search
+JogTouch,JogTouch,JogTouch,9008,1,2,11,12,,,,,,RO,Touch
+JogTouch,JogTouch+Shift,JogTouch,9008,4,5,14,15,,,,,,RO,Touch
+WheelPitchBend,WheelPitchBend,JogRotate,B009,1,2,11,12,,,,,,RO,Pitch Bend
+WheelSearch,WheelSearch,JogRotate,B009,4,5,14,15,,,,,,RO,Pitch Bend
+TempoSlider,TempoSlider,KnobSlider,B070,1,2,11,12,,,,,,Fast,Tempo Control
+
+BeatLoop4,,Button,9003,1,2,11,12,,,,,,,
+LoopDouble,,Button,900A,4,5,14,15,,,,,,Fast;,
+LoopHalf,,Button,9009,4,5,14,15,,,,,,Fast;,
+LoopIn,,Button,9009,1,2,11,12,,,,,,Fast;,
+LoopOut,,Button,900A,1,2,11,12,,,,,,Fast;,
+ReloopExit,,Button,9003,4,5,14,15,,,,,,Fast;,
+
+Cue,,Button,9006,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+PlayPause,,Button,9007,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+Stems,,Button,9010,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+HotCue,,Button,900F,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
+Shift,Shift,Button,9004,1,2,11,12,,,,,,RO;,Shift
+
+Parameter1Left_HotCue,,Button,9011,1,2,11,12,,,,,,,
+Parameter1Right_HotCue,,Button,9012,1,2,11,12,,,,,,,
+
+CrossFader,,KnobSlider,B000,,,,,,,,,,Fast;,
+HeadphonesVolume,,KnobSlider,B004,,,,,,,,,,,No function assigned here
+MasterLevel,,KnobSlider,B003,,,,,,,,,,,No function assigned here
+
+HeadphoneCue,HeadphoneCue,Button,900C,1,2,11,12,,,,,,,Headphone CUE On/Off
+
+EQHigh,,KnobSlider,B005,1,2,11,12,,,,,,Fast;,EQ High
+EQMid,,KnobSlider,B004,1,2,11,12,,,,,,Fast;,EQ Mid
+EQLow,,KnobSlider,B002,1,2,11,12,,,,,,Fast;,EQ Low
+
+ChannelFader,,KnobSlider,B000,1,2,11,12,,,,,,,
+
+CFXParameterCH1,CFXParameterCH1,KnobSliderHiRes,B101,,,,,,,,,,Fast,CH1 CFX Depth
+CFXParameterCH2,CFXParameterCH2,KnobSliderHiRes,B201,,,,,,,,,,Fast,CH2 CFX Depth
+CFXParameterCH3,CFXParameterCH3,KnobSliderHiRes,BB01,,,,,,,,,,Fast,CH3 CFX Depth
+CFXParameterCH4,CFXParameterCH4,KnobSliderHiRes,BC01,,,,,,,,,,Fast,CH4 CFX Depth
+
+Load,,Button,900D,1,2,11,12,,,,,,,
+
+PAD1_HotCue,PAD1.HotCue.Call,Pad,9000,6,7,8,9,,,,,,Fast,HOT CUE1
+PAD2_HotCue,PAD2.HotCue.Call,Pad,9001,6,7,8,9,,,,,,Fast,HOT CUE2
+PAD3_HotCue,PAD3.HotCue.Call,Pad,9002,6,7,8,9,,,,,,Fast,HOT CUE3
+PAD4_HotCue,PAD4.HotCue.Call,Pad,9003,6,7,8,9,,,,,,Fast,HOT CUE4
+PAD5_HotCue,PAD5.HotCue.Call,Pad,9008,6,7,8,9,,,,,,Fast,HOT CUE5
+PAD6_HotCue,PAD6.HotCue.Call,Pad,9009,6,7,8,9,,,,,,Fast,HOT CUE6
+PAD7_HotCue,PAD7.HotCue.Call,Pad,900A,6,7,8,9,,,,,,Fast,HOT CUE7
+PAD8_HotCue,PAD8.HotCue.Call,Pad,900B,6,7,8,9,,,,,,Fast,HOT CUE8
+
+ActivePartVocal,,DdjSxPad,9010,6,7,8,9,,,,,,Fast,
+ActivePartInst,,DdjSxPad,9011,6,7,8,9,,,,,,Fast,
+ActivePartBass,,DdjSxPad,9012,6,7,8,9,,,,,,Fast,
+ActivePartDrums,,DdjSxPad,9013,6,7,8,9,,,,,,Fast,
+
+
+FXPartSelectBassOn,,Pad,961A,,,,,,,,,,Fast,
+FXPartSelectDrumsOn,,Pad,961B,,,,,,,,,,Fast,
+FXPartSelectInstOn,,Pad,9619,,,,,,,,,,Fast,
+FXPartSelectVocalOn,,Pad,9618,,,,,,,,,,Fast,
+
+FXPartSelectBassOn,,Pad,971A,,,,,,,,,,Fast,
+FXPartSelectDrumsOn,,Pad,971B,,,,,,,,,,Fast,
+FXPartSelectInstOn,,Pad,9719,,,,,,,,,,Fast,
+FXPartSelectVocalOn,,Pad,9718,,,,,,,,,,Fast,
+
+FXPartSelectBassOn,,Pad,981A,,,,,,,,,,Fast,
+FXPartSelectDrumsOn,,Pad,981B,,,,,,,,,,Fast,
+FXPartSelectInstOn,,Pad,9819,,,,,,,,,,Fast,
+FXPartSelectVocalOn,,Pad,9818,,,,,,,,,,Fast,
+
+FXPartSelectBassOn,,Pad,991A,,,,,,,,,,Fast,
+FXPartSelectDrumsOn,,Pad,991B,,,,,,,,,,Fast,
+FXPartSelectInstOn,,Pad,9919,,,,,,,,,,Fast,
+FXPartSelectVocalOn,,Pad,9918,,,,,,,,,,Fast,
