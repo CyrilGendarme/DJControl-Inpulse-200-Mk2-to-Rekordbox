@@ -1,6 +1,0 @@
-@file,1,PIONEER DDJ-SX,,,,,,,,,,,,
-
-#name,function,type,input,deck1,deck2,deck3,deck4,output,deck1,deck2,deck3,deck4,option,comment
-,,,,,,,,,,,,,,
-Parameter1Left_HotCue,,Button,9011,1,2,11,12,,,,,,,
-Parameter1Right_HotCue,,Button,9012,1,2,11,12,,,,,,,
