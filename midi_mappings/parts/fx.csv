@@ -1,0 +1,27 @@
+@file,1,Minilab3 MIDI
+
+FX1Assign1,,Button,9924,,,,,,,,,,,
+FX1Assign2,,Button,9925,,,,,,,,,,,
+FX1Assign3,,Button,9926,,,,,,,,,,,
+FX1Assign4,,Button,9927,,,,,,,,,,,
+
+FX2Assign1,,Button,9928,,,,,,,,,,,
+FX2Assign2,,Button,9929,,,,,,,,,,,
+FX2Assign3,,Button,992A,,,,,,,,,,,
+FX2Assign4,,Button,992B,,,,,,,,,,,
+
+FX1-1,,KnobSlider,B04A,,,,,,,,,,,
+FX1-2,,KnobSlider,B047,,,,,,,,,,,
+FX1-3,,KnobSlider,B04C,,,,,,,,,,,
+
+FX2-1,,KnobSlider,B05D,,,,,,,,,,,
+FX2-2,,KnobSlider,B012,,,,,,,,,,,
+FX2-3,,KnobSlider,B013,,,,,,,,,,,
+
+FX1-1On,,Button,9030,,,,,,,,,,,
+FX1-2On,,Button,9032,,,,,,,,,,,
+FX1-3On,,Button,9034,,,,,,,,,,,
+
+FX2-1On,,Button,9045,,,,,,,,,,,
+FX2-2On,,Button,9047,,,,,,,,,,,
+FX2-3On,,Button,9048,,,,,,,,,,,
