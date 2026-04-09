@@ -1,54 +1,98 @@
+# sysex commands based on https://gist.github.com/Janiczek/04a87c2534b9d1435a1d8159c742d260 @Janiczek
+
 import mido
 from .controller_notes import *
 from helpers.midi_device_name import get_midi_device_name_matching_regex
+from .controller_notes import (
+    PAD_1_NOTE_INT,
+    PAD_2_NOTE_INT,
+    PAD_3_NOTE_INT,
+    PAD_4_NOTE_INT,
+    PAD_5_NOTE_INT,
+    PAD_6_NOTE_INT,
+    PAD_7_NOTE_INT,
+    PAD_8_NOTE_INT,
+)
+from .rgb_colors import *
 
-INST_BASS_PARTS_MERGED = True
+
+def sysex(*bytes):
+    # This automatically adds the 0xF0 prefix and 0xF7 suffix.
+    # There is also an Arturia-specific prefix (00 20 6B 7F 42) but we keep that explicit in the messages below.
+    return mido.Message("sysex", data=list(bytes))
 
 
-def set_sync_light(channel, note, on_true, out):
-    out.send(
-        mido.Message(
-            "note_on", note=note, velocity=127 if on_true else 0, channel=channel
+def init(port):
+    # Initialization: needed for display changes. Not needed for pad color changes
+    # TODO: what exactly does this do?
+    port.send(
+        sysex(
+            0x00,
+            0x20,
+            0x6B,
+            0x7F,
+            0x42,
+            0x02,
+            0x02,
+            0x40,
+            0x6A,
+            0x21,  # sometimes suggested to be 0x20. Is this Arturia vs DAW?
         )
     )
-    # Ensure the light state is preserved when "shift" touch is pressed
-    out.send(
-        mido.Message(
-            "note_on", note=note, velocity=127 if on_true else 0, channel=channel + 3
-        )
-    )
+    # port.send(sysex(0x00,0x20,0x6B,0x7F,0x42, 0x01,0x00,0x40,0x03))
+    # port.send(sysex(0x00,0x20,0x6B,0x7F,0x42, 0x01,0x00,0x40,0x01))
+    # port.send(sysex(0x00,0x20,0x6b,0x7f,0x42, 0x04,0x01,0x60,0x0a,0x0a,0x5f,0x51,0x00))
+
+
+def set_button_color(port, button, r=0x00, g=0x00, b=0x00):
+
+    print(f"Setting button {button} color to R={r} G={g} B={b}")
+    button += 3
+    assert button >= 0 and button <= 11, "pad must be 0..11"
+    assert r >= 0 and r <= 0x7F, "red must be 0x00..0x7F"
+    assert g >= 0 and g <= 0x7F, "green must be 0x00..0x7F"
+    assert b >= 0 and b <= 0x7F, "blue must be 0x00..0x7F"
+    port.send(sysex(0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x16, button, r, g, b))
 
 
 class StateMachine:
-    def __init__(self):
-        midi_out_light_playback_name = get_midi_device_name_matching_regex(
-            is_output=True,
-            regex="DJControl Inpulse 200 Mk2",
-        )
-        self.outport_lights = mido.open_output(midi_out_light_playback_name)
 
-        self.deck13 = False
-        self.deck24 = False
-        self.channel_1 = ChannelState(1, self.outport_lights)
-        self.channel_2 = ChannelState(2, self.outport_lights)
-        self.channel_3 = ChannelState(3, self.outport_lights)
-        self.channel_4 = ChannelState(4, self.outport_lights)
+    def __init__(self, outport_lights=None):
+        self._owns_outport_lights = outport_lights is None
+        if self._owns_outport_lights:
+            midi_out_light_playback_name = get_midi_device_name_matching_regex(
+                is_output=True,
+                regex="Minilab3 MIDI",
+            )
+            self.outport_lights = mido.open_output(midi_out_light_playback_name)
+        else:
+            self.outport_lights = outport_lights
 
-        self.vocal_fx_active = True
-        self.inst_fx_active = True
-        self.bass_fx_active = True
-        self.drums_fx_active = True
-        self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
+        self.pads_state = [True, False, False, False, False, True, False, False]
 
-        set_sync_light(1, SYNC_NOTE, self.deck13, self.outport_lights)
-        set_sync_light(2, SYNC_NOTE, self.deck24, self.outport_lights)
-        self.set_fx_part_light_playback(FX_VOCAL_NOTE, True)
-        self.set_fx_part_light_playback(FX_INST_NOTE, True)
-        self.set_fx_part_light_playback(FX_BASS_NOTE, True)
-        self.set_fx_part_light_playback(FX_DRUMS_NOTE, True)
+        init(self.outport_lights)
+        set_button_color(self.outport_lights, 1, *LIGHT_WHITE)
+        set_button_color(self.outport_lights, 6, *LIGHT_BLUE)
+
+    def switch_pad_state(self, pad_index):
+        if pad_index < 0 or pad_index >= len(self.pads_state):
+            raise ValueError(f"Invalid pad index: {pad_index}")
+        self.pads_state[pad_index] = not self.pads_state[pad_index]
+
+        if self.pads_state[pad_index]:
+            if pad_index in [0, 1, 2, 3]:
+                set_button_color(self.outport_lights, pad_index + 1, *LIGHT_WHITE)
+            else:
+                set_button_color(self.outport_lights, pad_index + 1, *LIGHT_BLUE)
+        else:
+            set_button_color(self.outport_lights, pad_index + 1, 0x00, 0x00, 0x00)
 
     def close(self):
-        if self.outport_lights and not self.outport_lights.closed:
+        if (
+            self._owns_outport_lights
+            and self.outport_lights
+            and not self.outport_lights.closed
+        ):
             self.outport_lights.close()
 
     def __enter__(self):
@@ -58,208 +102,30 @@ class StateMachine:
         self.close()
         return False
 
-    def switch_deck13(self):
-        self.deck13 = not self.deck13
-        set_sync_light(1, SYNC_NOTE, self.deck13, self.outport_lights)
-        if self.deck13:
-            self.channel_3.set_all_lights_playback()
-        else:
-            self.channel_1.set_all_lights_playback()
-
-    def switch_deck24(self):
-        self.deck24 = not self.deck24
-        set_sync_light(2, SYNC_NOTE, self.deck24, self.outport_lights)
-        if self.deck24:
-            self.channel_4.set_all_lights_playback()
-        else:
-            self.channel_2.set_all_lights_playback()
-
-    def _get_channel_state(self, channel):
-        if channel in [1, 4, 6]:
-            return self.channel_3 if self.deck13 else self.channel_1
-        elif channel in [2, 5, 7]:
-            return self.channel_4 if self.deck24 else self.channel_2
-        elif channel == 11:
-            return self.channel_3
-        elif channel == 12:
-            return self.channel_4
-        return None
-
-    def _is_channel_main(self, ims):
-        return ims.channel in [1, 2, 11, 12]
-
-    def set_fx_part_light_playback(self, fx_note, active):
-        set_sync_light(6, fx_note, active, self.outport_lights)
-        set_sync_light(7, fx_note, active, self.outport_lights)
-
     def ims_to_lights_playback(self, ims):
-        if ims.type != "note_on":
-            return
-
-        channel_state = self._get_channel_state(ims.channel)
-        if channel_state is None:
-            return
-
-        pressed = ims.velocity > 0
-
-        if ims.note == LOAD_NOTE and pressed:
-            channel_state.reset_lights_playback_after_track_load()
-        elif ims.note == HOT_CUE_MODE_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.switch_mode_to_hot_cue()
-        elif ims.note == STEMS_MODE_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.switch_mode_to_stems()
-        elif ims.note == PLAYPAUSE_NOTE and pressed:
-            channel_state.set_play_active(not channel_state.play_active)
-        elif ims.note == HEADPHONE_CUE_NOTE and pressed:
-            channel_state.set_headphone_cue_active(
-                not channel_state.headphone_cue_active
-            )
-        elif ims.note == LOOP_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.set_loop_active(True)
-        elif ims.note == LOOP_NOTE and pressed and not self._is_channel_main(ims):
-            channel_state.set_loop_active(False)
-        elif ims.note == FX_VOCAL_NOTE and pressed:
-            self.vocal_fx_active = not self.vocal_fx_active
-            self.set_fx_part_light_playback(FX_VOCAL_NOTE, self.vocal_fx_active)
-        elif ims.note == FX_INST_NOTE and pressed:
-            self.inst_fx_active = not self.inst_fx_active
-            self.set_fx_part_light_playback(FX_INST_NOTE, self.inst_fx_active)
-            if self.inst_bass_parts_merged:
-                self.bass_fx_active = self.inst_fx_active
-                self.set_fx_part_light_playback(FX_BASS_NOTE, self.bass_fx_active)
-        elif ims.note == FX_BASS_NOTE and pressed:
-            self.bass_fx_active = not self.bass_fx_active
-            self.set_fx_part_light_playback(FX_BASS_NOTE, self.bass_fx_active)
-            if self.inst_bass_parts_merged:
-                self.inst_fx_active = self.bass_fx_active
-                self.set_fx_part_light_playback(FX_INST_NOTE, self.bass_fx_active)
-        elif ims.note == FX_DRUMS_NOTE and pressed:
-            self.drums_fx_active = not self.drums_fx_active
-            self.set_fx_part_light_playback(FX_DRUMS_NOTE, self.drums_fx_active)
-
-        elif ims.note == VOCAL_PART_NOTE and pressed:
-            channel_state.set_music_part_active("vocal", not channel_state.vocal_active)
-        elif ims.note == INST_PART_NOTE and pressed:
-            channel_state.set_music_part_active("inst", not channel_state.inst_active)
-        elif ims.note == BASS_PART_NOTE and pressed:
-            channel_state.set_music_part_active("bass", not channel_state.bass_active)
-        elif ims.note == DRUMS_PART_NOTE and pressed:
-            channel_state.set_music_part_active("drums", not channel_state.drums_active)
-
-
-class ChannelState:
-    def __init__(self, channel, outport_lights):
-        self.channel = channel
-        self.deck = 1 if channel in [1, 3] else 2
-        self.outport_lights = outport_lights
-        self.play_active = False
-        self.headphone_cue_active = False
-        self.loop_active = False
-        self.hot_cue_mode = True
-        self.stems_mode = False
-        self.loop_in_pressed = False
-        self.vocal_active = True
-        self.inst_active = True
-        self.bass_active = True
-        self.drums_active = True
-        self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
-        self.set_all_lights_playback()
-
-    def switch_mode_to_hot_cue(self):
-        self.hot_cue_mode = True
-        self.stems_mode = False
-        set_sync_light(
-            self.deck, HOT_CUE_MODE_NOTE, self.hot_cue_mode, self.outport_lights
-        )
-        set_sync_light(self.deck, STEMS_MODE_NOTE, self.stems_mode, self.outport_lights)
-
-    def switch_mode_to_stems(self):
-        self.hot_cue_mode = False
-        self.stems_mode = True
-        set_sync_light(
-            self.deck, HOT_CUE_MODE_NOTE, self.hot_cue_mode, self.outport_lights
-        )
-        set_sync_light(self.deck, STEMS_MODE_NOTE, self.stems_mode, self.outport_lights)
-
-    def set_play_active(self, active):
-        self.play_active = active
-        set_sync_light(self.deck, PLAYPAUSE_NOTE, self.play_active, self.outport_lights)
-
-    def set_headphone_cue_active(self, active):
-        self.headphone_cue_active = active
-        set_sync_light(
-            self.deck,
-            HEADPHONE_CUE_NOTE,
-            self.headphone_cue_active,
-            self.outport_lights,
-        )
-
-    def set_loop_active(self, active):
-        self.loop_active = active
-        set_sync_light(self.deck, LOOP_NOTE, self.loop_active, self.outport_lights)
-
-    def set_music_part_active(self, part, active):
-        if part == "vocal":
-            self.vocal_active = active
-            set_sync_light(
-                self.deck + 5, VOCAL_PART_NOTE, self.vocal_active, self.outport_lights
-            )
-        elif part == "inst":
-            self.inst_active = active
-            set_sync_light(
-                self.deck + 5, INST_PART_NOTE, self.inst_active, self.outport_lights
-            )
-            if self.inst_bass_parts_merged:
-                self.bass_active = self.inst_active
-                set_sync_light(
-                    self.deck + 5, BASS_PART_NOTE, self.bass_active, self.outport_lights
-                )
-        elif part == "bass":
-            self.bass_active = active
-            set_sync_light(
-                self.deck + 5, BASS_PART_NOTE, self.bass_active, self.outport_lights
-            )
-            if self.inst_bass_parts_merged:
-                self.inst_active = self.bass_active
-                set_sync_light(
-                    self.deck + 5, INST_PART_NOTE, self.inst_active, self.outport_lights
-                )
-        elif part == "drums":
-            self.drums_active = active
-            set_sync_light(
-                self.deck + 5, DRUMS_PART_NOTE, self.drums_active, self.outport_lights
-            )
-
-    def set_all_lights_playback(self):
-        set_sync_light(
-            self.deck, HOT_CUE_MODE_NOTE, self.hot_cue_mode, self.outport_lights
-        )
-        set_sync_light(self.deck, STEMS_MODE_NOTE, self.stems_mode, self.outport_lights)
-        set_sync_light(self.deck, PLAYPAUSE_NOTE, self.play_active, self.outport_lights)
-        set_sync_light(
-            self.deck,
-            HEADPHONE_CUE_NOTE,
-            self.headphone_cue_active,
-            self.outport_lights,
-        )
-        set_sync_light(self.deck, LOOP_NOTE, self.loop_active, self.outport_lights)
-        set_sync_light(
-            self.deck + 5, VOCAL_PART_NOTE, self.vocal_active, self.outport_lights
-        )
-        set_sync_light(
-            self.deck + 5, INST_PART_NOTE, self.inst_active, self.outport_lights
-        )
-        set_sync_light(
-            self.deck + 5, BASS_PART_NOTE, self.bass_active, self.outport_lights
-        )
-        set_sync_light(
-            self.deck + 5, DRUMS_PART_NOTE, self.drums_active, self.outport_lights
-        )
-
-    def reset_lights_playback_after_track_load(self):
-        self.set_play_active(False)
-        self.set_loop_active(False)
-        self.set_music_part_active("vocal", True)
-        self.set_music_part_active("inst", True)
-        self.set_music_part_active("bass", True)
-        self.set_music_part_active("drums", True)
+        if ims.type == "note_off" and ims.note in [
+            PAD_1_NOTE_INT,
+            PAD_2_NOTE_INT,
+            PAD_3_NOTE_INT,
+            PAD_4_NOTE_INT,
+            PAD_5_NOTE_INT,
+            PAD_6_NOTE_INT,
+            PAD_7_NOTE_INT,
+            PAD_8_NOTE_INT,
+        ]:
+            if ims.note == PAD_1_NOTE_INT:
+                self.switch_pad_state(0)
+            elif ims.note == PAD_2_NOTE_INT:
+                self.switch_pad_state(1)
+            elif ims.note == PAD_3_NOTE_INT:
+                self.switch_pad_state(2)
+            elif ims.note == PAD_4_NOTE_INT:
+                self.switch_pad_state(3)
+            elif ims.note == PAD_5_NOTE_INT:
+                self.switch_pad_state(4)
+            elif ims.note == PAD_6_NOTE_INT:
+                self.switch_pad_state(5)
+            elif ims.note == PAD_7_NOTE_INT:
+                self.switch_pad_state(6)
+            elif ims.note == PAD_8_NOTE_INT:
+                self.switch_pad_state(7)
