@@ -37,3 +37,7 @@ PAD8_Sampler,,DdjSxPad,,903c,9044,,,,,,,,Fast;,
 
 SamplerVolume,,KnobSlider,B052,,,,,,,,,,,
 SamplerGain,,KnobSlider,B053,,,,,,,,,,,
+
+SemitoneDown,,Button,,900B,900C,900D,900E,,,,,,,
+SemitoneUp,,Button,,9015,9016,9017,9018,,,,,,,
+
