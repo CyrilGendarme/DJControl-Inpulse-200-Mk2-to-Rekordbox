@@ -3,8 +3,8 @@ import re
 
 
 def get_midi_device_name_matching_regex(is_output: bool, regex: str) -> str:
-    device_names = mido.get_output_names()  if is_output else mido.get_input_names()
-    print(f"{'Output' if is_output else 'Input'} MIDI devices found: {device_names}")
+    device_names = mido.get_output_names() if is_output else mido.get_input_names()
+    # print(f"{'Output' if is_output else 'Input'} MIDI devices found: {device_names}")
     pattern = re.compile(regex, re.IGNORECASE)
     for name in device_names:
         if pattern.search(name):

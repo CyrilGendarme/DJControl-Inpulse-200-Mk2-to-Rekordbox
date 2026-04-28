@@ -34,23 +34,44 @@ def main():
                     virtual_outport.send(ims)
 
                 elif ims.type in ["note_on"]:  # Only forward note_on
+
+                    print(f"Received note_on: {ims.note} (velocity: {ims.velocity})")
+
                     if ims.note in [
                         SEMITONE_DOWN_NOTE_INT,
                         SEMITONE_UP_NOTE_INT,
                     ]:
-                        for idx, state in enumerate(
-                            state_machine.get_active_fx1_channel()
-                        ):
-                            if state:
-                                msg = ims.copy(
-                                    note=(
-                                        10 if ims.note == SEMITONE_DOWN_NOTE_INT else 20
-                                    )
-                                    + idx
-                                    + 1
-                                )  # Map to a different note for each channel, matchinig midi_mappings/Minilab3.csv
-                                print(f"--- will send {msg} to channel {msg.channel}")
-                                virtual_outport.send(msg)
+
+                        if state_machine.shift_state:
+                            for idx, state in enumerate(
+                                state_machine.get_active_fx_effects()
+                            ):
+                                if state:
+                                    msg = ims.copy(
+                                        note=(
+                                            80
+                                            if ims.note == SEMITONE_DOWN_NOTE_INT
+                                            else 90
+                                        )
+                                        + idx
+                                        + 1
+                                    )  # Map to a different note for each effect, matchinig midi_mappings/Minilab3.csv
+                                    virtual_outport.send(msg)
+                        else:
+                            for idx, state in enumerate(
+                                state_machine.get_active_fx1_channels()
+                            ):
+                                if state:
+                                    msg = ims.copy(
+                                        note=(
+                                            10
+                                            if ims.note == SEMITONE_DOWN_NOTE_INT
+                                            else 20
+                                        )
+                                        + idx
+                                        + 1
+                                    )  # Map to a different note for each channel, matchinig midi_mappings/Minilab3.csv
+                                    virtual_outport.send(msg)
                     else:
                         virtual_outport.send(ims)
 
