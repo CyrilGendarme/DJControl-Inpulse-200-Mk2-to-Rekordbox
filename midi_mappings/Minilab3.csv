@@ -35,8 +35,7 @@ PAD6_Sampler,,DdjSxPad,,903a,9042,,,,,,,,Fast;,
 PAD7_Sampler,,DdjSxPad,,903b,9043,,,,,,,,Fast;,
 PAD8_Sampler,,DdjSxPad,,903c,9044,,,,,,,,Fast;,
 
-SamplerVolume,,KnobSlider,B052,,,,,,,,,,,
-SamplerGain,,KnobSlider,B053,,,,,,,,,,,
+SamplerVolume,,KnobSlider,B011,,,,,,,,,,,
 
 SemitoneDown,,Button,,900B,900C,900D,900E,,,,,,,
 SemitoneUp,,Button,,9015,9016,9017,9018,,,,,,,
@@ -53,3 +52,7 @@ FX2-2BeatDown,,Button,9055,,,,,,,,,,,
 FX2-2BeatUp,,Button,905F,,,,,,,,,,,
 FX2-3BeatDown,,Button,9056,,,,,,,,,,,
 FX2-3BeatUp,,Button,9060,,,,,,,,,,,
+
+PartIsolatorVocal,,KnobSlider,,B016,B01B,B020,B025,,,,,,,
+PartIsolatorInst,,KnobSlider,,B017,B01C,B021,B026,,,,,,,
+PartIsolatorDrums,,KnobSlider,,B019,B01E,B023,B028,,,,,,,

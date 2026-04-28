@@ -93,10 +93,16 @@ class StateMachine:
 
         self._base_screen_timer = None
 
+        self.shift_state = False
+
         init(self.outport_lights)
 
         self.set_pads_colored_lights()
         self.set_base_screen()
+
+    def switch_shift_state(self):
+        self.shift_state = not self.shift_state
+        self.set_pads_colored_lights()
 
     def switch_pad_state(self, pad_index):
         if pad_index < 0 or pad_index >= len(self.pads_state):
@@ -105,6 +111,7 @@ class StateMachine:
         self.pads_state[pad_index] = not self.pads_state[pad_index]
 
         self.set_pads_colored_lights()
+        self.set_base_screen()
 
     def switch_fx_effect_state(self, fx_index, effect_index):
         if fx_index == 1:
@@ -125,6 +132,8 @@ class StateMachine:
         for pad_index, pad_state in enumerate(self.pads_state):
             if not pad_state:
                 color = DARK
+            elif self.shift_state:
+                color = GREEN
             else:
                 if pad_index in [0, 1, 2, 3]:
                     if fx1_effects_nb == 0:
@@ -139,19 +148,19 @@ class StateMachine:
                     if fx2_effects_nb == 0:
                         color = WHITE
                     elif fx2_effects_nb == 1:
-                        color = GREEN
+                        color = LIGHT_BLUE
                     elif fx2_effects_nb == 2:
                         color = BLUE
                     elif fx2_effects_nb == 3:
-                        color = VIOLET
+                        color = DARK_BLUE
 
             set_button_color(self.outport_lights, pad_index + 1, *color)
 
     def set_base_screen(self):
         show_text(
             self.outport_lights,
-            "echo - rvrb - fltr",
-            f"[{'X' if self.fx1_effects[0] else ' '}][{'X' if self.fx1_effects[1] else ' '}][{'X' if self.fx1_effects[2] else ' '}] [{'X' if self.fx2_effects[0] else ' '}][{'X' if self.fx2_effects[1] else ' '}][{'X' if self.fx2_effects[2] else ' '}]",
+            f"{'E ' if self.fx1_effects[0] else '_'}{'R ' if self.fx1_effects[1] else '_'}{'F ' if self.fx1_effects[2] else '_'}    {' E' if self.fx2_effects[0] else '_'}{' R' if self.fx2_effects[1] else '_'}{' F' if self.fx2_effects[2] else '_'}",
+            f"[{'X' if self.pads_state[0] else ' '}][{'X' if self.pads_state[1] else ' '}][{'X' if self.pads_state[2] else ' '}][{'X' if self.pads_state[3] else ' '}] [{'X' if self.pads_state[4] else ' '}][{'X' if self.pads_state[5] else ' '}][{'X' if self.pads_state[6] else ' '}][{'X' if self.pads_state[7] else ' '}]",
         )
 
     def set_other_screen_then_base_screen(self, line1, line2):
@@ -182,7 +191,11 @@ class StateMachine:
         return False
 
     def ims_to_playback(self, ims):
-        if ims.type == "note_off" and ims.note in PADS_NOTES:
+        if ims.type == "note_off" and ims.note == SHIFT_LIKE_NOTE_INT:
+            self.switch_shift_state()
+
+        elif ims.type == "note_off" and ims.note in PADS_NOTES:
+            print("DEBUG 1")
             if ims.note == PAD_1_NOTE_INT:
                 self.switch_pad_state(0)
             elif ims.note == PAD_2_NOTE_INT:
@@ -244,5 +257,8 @@ class StateMachine:
             self.set_other_screen_then_base_screen(f"SAMPLE {ims.note - 52}", "")
 
     # Used to send multi semitone variations
-    def get_active_fx1_channel(self):
+    def get_active_fx1_channels(self) -> list:
         return self.pads_state[:4]
+
+    def get_active_fx_effects(self) -> list:
+        return self.fx1_effects + self.fx2_effects

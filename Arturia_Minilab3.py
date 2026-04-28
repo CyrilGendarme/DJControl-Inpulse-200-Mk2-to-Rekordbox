@@ -8,6 +8,7 @@ from djcontrol_specific.controller_notes import (
     SHIFT_NOTE_INT,
     SEMITONE_DOWN_NOTE_INT,
     SEMITONE_UP_NOTE_INT,
+    FADERS_ISO_VOLUME_INT,
 )
 
 
@@ -31,11 +32,26 @@ def main():
                     continue
 
                 if ims.type == "control_change":
-                    virtual_outport.send(ims)
+                    if ims.control in FADERS_ISO_VOLUME_INT:
+                        for idx, state in enumerate(
+                            state_machine.get_active_fx1_channels()
+                        ):
+                            if state:
+                                msg = ims.copy(
+                                    control=ims.control
+                                    - 80
+                                    + 20
+                                    + 5
+                                    * idx  # i.e. values in [22, 23, 25] with a max increment of 15
+                                )  # Map to a different note for each channel, matching midi_mappings/Minilab3.csv
+                                virtual_outport.send(msg)
+
+                    else:
+                        virtual_outport.send(ims)
 
                 elif ims.type in ["note_on"]:  # Only forward note_on
 
-                    print(f"Received note_on: {ims.note} (velocity: {ims.velocity})")
+                    # print(f"Received note_on: {ims.note} (velocity: {ims.velocity})")
 
                     if ims.note in [
                         SEMITONE_DOWN_NOTE_INT,
@@ -55,7 +71,7 @@ def main():
                                         )
                                         + idx
                                         + 1
-                                    )  # Map to a different note for each effect, matchinig midi_mappings/Minilab3.csv
+                                    )  # Map to a different note for each effect, matching midi_mappings/Minilab3.csv
                                     virtual_outport.send(msg)
                         else:
                             for idx, state in enumerate(
@@ -70,7 +86,7 @@ def main():
                                         )
                                         + idx
                                         + 1
-                                    )  # Map to a different note for each channel, matchinig midi_mappings/Minilab3.csv
+                                    )  # Map to a different note for each channel, matching midi_mappings/Minilab3.csv
                                     virtual_outport.send(msg)
                     else:
                         virtual_outport.send(ims)
