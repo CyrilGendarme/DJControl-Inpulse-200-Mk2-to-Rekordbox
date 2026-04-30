@@ -1,0 +1,15 @@
+@file,1,Virtual Minilab3
+
+FX1-1SelectBack,,Button,9001,,,,,,,,,,,
+FX1-3SelectBack,,Button,9003,,,,,,,,,,,
+FX1-2SelectBack,,Button,9002,,,,,,,,,,,
+FX2-2SelectBack,,Button,9005,,,,,,,,,,,
+FX2-1SelectBack,,Button,9004,,,,,,,,,,,
+FX2-3SelectBack,,Button,9006,,,,,,,,,,,
+
+FX1-1Select,,Button,901F,,,,,,,,,,,
+FX1-2Select,,Button,9020,,,,,,,,,,,
+FX1-3Select,,Button,9021,,,,,,,,,,,
+FX2-1Select,,Button,9022,,,,,,,,,,,
+FX2-2Select,,Button,9023,,,,,,,,,,,
+FX2-3Select,,Button,9024,,,,,,,,,,,
