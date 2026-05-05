@@ -39,6 +39,7 @@ class StateMachine:
         self.bass_fx_active = True
         self.drums_fx_active = True
         self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
+        self.assist_prep_pressed = False
 
         set_sync_light(1, SYNC_NOTE, self.deck13, self.outport_lights)
         set_sync_light(2, SYNC_NOTE, self.deck24, self.outport_lights)
@@ -92,12 +93,18 @@ class StateMachine:
         set_sync_light(6, fx_note, active, self.outport_lights)
         set_sync_light(7, fx_note, active, self.outport_lights)
 
+    def set_assist_prep_pressed_state(self, pressed):
+        self.assist_prep_pressed = pressed
+        set_sync_light(0, ASSIST_PREP_NOTE, pressed, self.outport_lights)
+
     def ims_to_lights_playback(self, ims):
         if ims.type != "note_on":
             return
 
         channel_state = self._get_channel_state(ims.channel)
         if channel_state is None:
+            if ims.note == ASSIST_PREP_NOTE:
+                self.set_assist_prep_pressed_state(ims.velocity > 0)
             return
 
         pressed = ims.velocity > 0

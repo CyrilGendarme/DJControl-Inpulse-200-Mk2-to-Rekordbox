@@ -10,8 +10,10 @@ from djcontrol_specific.controller_notes import (
     JOG_SIDE_CODE,
     JOG_TOP_CODE,
     SYNC_NOTE_INT,
+    PAD_NOTES,
+    PAD_NOTES_1_3,
+    PAD_NOTES_2_4,
 )
-
 
 def main():
     midi_inp_name = get_midi_device_name_matching_regex(
@@ -66,8 +68,6 @@ def main():
                             msg,
                             outport,
                             wheel_messages_counter,
-                            JOG_SIDE_CODE,
-                            JOG_TOP_CODE,
                         )
                     else:
                         outport.send(msg)
@@ -75,6 +75,13 @@ def main():
                     tempo_reverse(msg, outport)
 
                 elif ims.type in ["note_on", "note_off"]:
+                    if msg.note in PAD_NOTES_1_3:
+                        if state_machine.assist_prep_pressed:
+                            msg.note = 20
+                    elif msg.note in PAD_NOTES_2_4:
+                        if state_machine.assist_prep_pressed:
+                            msg.note = 21
+
                     outport.send(msg)
 
     except KeyboardInterrupt:
