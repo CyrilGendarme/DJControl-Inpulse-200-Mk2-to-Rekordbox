@@ -7,3 +7,5 @@ PlayPause,,Button,9007,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
 Stems,,Button,9010,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
 HotCue,,Button,900F,1,2,11,12,,,,,,Fast;Priority=50,Play/Pause
 Shift,Shift,Button,9004,1,2,11,12,,,,,,RO;,Shift
+
+Master,,Button,9016,6,7,8,9,,,,,,,

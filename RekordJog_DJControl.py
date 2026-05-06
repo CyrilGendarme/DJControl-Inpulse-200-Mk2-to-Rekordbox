@@ -11,8 +11,9 @@ from djcontrol_specific.controller_notes import (
     JOG_TOP_CODE,
     SYNC_NOTE_INT,
     PAD_NOTES,
-    PAD_NOTES_1_3,
-    PAD_NOTES_2_4,
+    PAD_NOTES_LEFT,
+    PAD_NOTES_RIGHT,
+    PAD_NOTES,
 )
 
 def main():
@@ -62,6 +63,8 @@ def main():
 
                 state_machine.ims_to_lights_playback(ims)
 
+                print(f"Received MIDI message: {ims}")
+
                 if ims.type == "control_change":
                     if ims.control == JOG_SIDE_CODE or ims.control == JOG_TOP_CODE:
                         wheel_messages_counter = jog_incremental(
@@ -75,11 +78,14 @@ def main():
                     tempo_reverse(msg, outport)
 
                 elif ims.type in ["note_on", "note_off"]:
-                    if msg.note in PAD_NOTES_1_3:
-                        if state_machine.assist_prep_pressed:
+
+                    # Special handling for pad buttons when Master or Assist Prep is pressed
+                    if state_machine.master_pressed and ims.note in PAD_NOTES:
+                        msg.note = 22
+                    if state_machine.assist_prep_pressed:
+                        if msg.note in PAD_NOTES_LEFT:
                             msg.note = 20
-                    elif msg.note in PAD_NOTES_2_4:
-                        if state_machine.assist_prep_pressed:
+                        elif msg.note in PAD_NOTES_RIGHT:
                             msg.note = 21
 
                     outport.send(msg)

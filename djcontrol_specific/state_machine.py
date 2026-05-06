@@ -40,6 +40,7 @@ class StateMachine:
         self.drums_fx_active = True
         self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
         self.assist_prep_pressed = False
+        self.master_pressed = False
 
         set_sync_light(1, SYNC_NOTE, self.deck13, self.outport_lights)
         set_sync_light(2, SYNC_NOTE, self.deck24, self.outport_lights)
@@ -95,7 +96,13 @@ class StateMachine:
 
     def set_assist_prep_pressed_state(self, pressed):
         self.assist_prep_pressed = pressed
-        set_sync_light(0, ASSIST_PREP_NOTE, pressed, self.outport_lights)
+        # set_sync_light(0, ASSIST_PREP_NOTE, pressed, self.outport_lights)
+        set_sync_light(0, ASSIST_PREP_NOTE, False, self.outport_lights)
+
+    def set_master_pressed_state(self, pressed):
+        self.master_pressed = pressed
+        # set_sync_light(0, MASTER_NOTE, pressed, self.outport_lights)
+        set_sync_light(0, MASTER_NOTE, False, self.outport_lights)
 
     def ims_to_lights_playback(self, ims):
         if ims.type != "note_on":
@@ -105,6 +112,8 @@ class StateMachine:
         if channel_state is None:
             if ims.note == ASSIST_PREP_NOTE:
                 self.set_assist_prep_pressed_state(ims.velocity > 0)
+            if ims.note == MASTER_NOTE:
+                self.set_master_pressed_state(ims.velocity > 0)
             return
 
         pressed = ims.velocity > 0
@@ -125,6 +134,7 @@ class StateMachine:
             channel_state.set_loop_active(True)
         elif ims.note == LOOP_NOTE and pressed and not self._is_channel_main(ims):
             channel_state.set_loop_active(False)
+
         elif ims.note == FX_VOCAL_NOTE and pressed:
             self.vocal_fx_active = not self.vocal_fx_active
             self.set_fx_part_light_playback(FX_VOCAL_NOTE, self.vocal_fx_active)
@@ -144,14 +154,23 @@ class StateMachine:
             self.drums_fx_active = not self.drums_fx_active
             self.set_fx_part_light_playback(FX_DRUMS_NOTE, self.drums_fx_active)
 
-        elif ims.note == VOCAL_PART_NOTE and pressed:
-            channel_state.set_music_part_active("vocal", not channel_state.vocal_active)
-        elif ims.note == INST_PART_NOTE and pressed:
-            channel_state.set_music_part_active("inst", not channel_state.inst_active)
-        elif ims.note == BASS_PART_NOTE and pressed:
-            channel_state.set_music_part_active("bass", not channel_state.bass_active)
-        elif ims.note == DRUMS_PART_NOTE and pressed:
-            channel_state.set_music_part_active("drums", not channel_state.drums_active)
+        if not self.assist_prep_pressed:
+            if ims.note == VOCAL_PART_NOTE and pressed:
+                channel_state.set_music_part_active(
+                    "vocal", not channel_state.vocal_active
+                )
+            elif ims.note == INST_PART_NOTE and pressed:
+                channel_state.set_music_part_active(
+                    "inst", not channel_state.inst_active
+                )
+            elif ims.note == BASS_PART_NOTE and pressed:
+                channel_state.set_music_part_active(
+                    "bass", not channel_state.bass_active
+                )
+            elif ims.note == DRUMS_PART_NOTE and pressed:
+                channel_state.set_music_part_active(
+                    "drums", not channel_state.drums_active
+                )
 
 
 class ChannelState:
