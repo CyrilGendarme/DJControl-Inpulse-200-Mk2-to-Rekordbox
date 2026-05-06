@@ -63,6 +63,7 @@ def main():
                             STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_2,
                         ]:
                             state_machine.stepped_knob_turn_right()
+
                             for idx, state in enumerate(active_fx_effects):
                                 if state:
                                     msg = mido.Message(
@@ -80,6 +81,7 @@ def main():
                             STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
                         ]:
                             state_machine.stepped_knob_turn_left()
+
                             for idx, state in enumerate(active_fx_effects):
                                 if state:
                                     msg = mido.Message(
