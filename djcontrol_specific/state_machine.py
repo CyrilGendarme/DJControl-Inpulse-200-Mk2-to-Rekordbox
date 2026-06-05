@@ -159,7 +159,7 @@ class StateMachine:
         self._screen_message_queue = []
         self._screen_message_lock = threading.Lock()
 
-        self.shift_state = False
+        self.sampler_volume_on = True
 
         init(self.outport_lights)
 
@@ -176,9 +176,8 @@ class StateMachine:
             for fx_name, beat_period in preset_entries
         ]
 
-    def switch_shift_state(self):
-        self.shift_state = not self.shift_state
-        self.set_pads_colored_lights()
+    def switch_sampler_volume_on(self):
+        self.sampler_volume_on = not self.sampler_volume_on
 
     def switch_pad_state(self, pad_index):
         if pad_index < 0 or pad_index >= len(self.pads_state):
@@ -208,8 +207,6 @@ class StateMachine:
         for pad_index, pad_state in enumerate(self.pads_state):
             if not pad_state:
                 color = DARK
-            elif self.shift_state:
-                color = GREEN
             else:
                 if pad_index in [0, 1, 2, 3]:
                     if fx1_effects_nb == 0:
@@ -282,9 +279,7 @@ class StateMachine:
             )
             self._base_screen_timer.start()
 
-    def set_other_screen_then_base_screen(
-        self, line1, line2, clear_pile: bool = False
-    ):
+    def set_other_screen_then_base_screen(self, line1, line2, clear_pile: bool = False):
         with self._screen_message_lock:
             if clear_pile:
                 self._screen_message_queue.clear()
@@ -325,8 +320,8 @@ class StateMachine:
         return False
 
     def ims_to_playback(self, ims):
-        if ims.type == "note_off" and ims.note == SHIFT_LIKE_NOTE_INT:
-            self.switch_shift_state()
+        if ims.type == "note_off" and ims.note == SAMPLER_VOLUME_SWITCH:
+            self.switch_sampler_volume_on()
 
         elif ims.type == "note_off" and ims.note in PADS_NOTES:
             if ims.note == PAD_1_NOTE_INT:

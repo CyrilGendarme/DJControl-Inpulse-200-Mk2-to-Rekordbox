@@ -8,5 +8,6 @@ PAD6_Sampler,,DdjSxPad,,903a,9042,,,,,,,,Fast;,
 PAD7_Sampler,,DdjSxPad,,903b,9043,,,,,,,,Fast;,
 PAD8_Sampler,,DdjSxPad,,903c,9044,,,,,,,,Fast;,
 
-SamplerVolume,,KnobSlider,B011,,,,,,,,,,,
-
+SamplerGain,,KnobSlider,B011,,,,,,,,,,,
+SamplerVolume,,KnobSlider,B014,,,,,,,,,,,
+SamplerCue,,Button,9046,,,,,,,,,,,

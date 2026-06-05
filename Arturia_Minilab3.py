@@ -14,6 +14,7 @@ from djcontrol_specific.controller_notes import (
     STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_2,
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_1,
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
+    SAMPLER_VOLUME_SWITCH,
 )
 
 def main():
@@ -136,6 +137,17 @@ def main():
                                         + 1
                                     )  # Map to a different note for each channel, matching midi_mappings/Minilab3.csv
                                     virtual_outport.send(msg)
+                    elif ims.note == SAMPLER_VOLUME_SWITCH:
+                        if state_machine.sampler_volume_on:
+                            value = 127
+                        else:
+                            value = 0
+                        msg = mido.Message(
+                            type="control_change", value=value, control=20
+                        )
+                        virtual_outport.send(msg)
+                        virtual_outport.send(ims)
+
                     else:
                         virtual_outport.send(ims)
 
