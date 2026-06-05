@@ -37,17 +37,14 @@ class FxName(str, Enum):
     CRUSH_ECHO = "CRUSH ECHO"
     SPIRAL_DOWN = "SPIRAL DOWN"
     REVERB_DOWN = "REVERB DOWN"
-    
+
 available_fx = [
     FxName.DELAY,
     FxName.ECHO,
     FxName.REVERB,
     FxName.TRANS,
-    FxName.FILTER,
-    FxName.PHASER,
-    FxName.VINYL_BRAKE,
-    FxName.NOISE,
-    ]
+    FxName.ROLL,
+]
 
 
 def get_nb_of_steps_until_next_avaailalbe_effect(current_effect: FxName) -> int:
@@ -64,12 +61,9 @@ def get_nb_of_steps_until_next_avaailalbe_effect(current_effect: FxName) -> int:
             return step
 
     raise ValueError("No available FX configured in available_fx.")
-    
-
 
 
 class FxBeatPeriod(str, Enum):
-    ONE_SIXTEENTH = "1/16"
     ONE_EIGHTH = "1/8"
     ONE_QUARTER = "1/4"
     ONE_HALF = "1/2"
@@ -78,6 +72,7 @@ class FxBeatPeriod(str, Enum):
     TWO = "2"
     FOUR = "4"
     EIGHT = "8"
+    SIXTEEN = "16"
 
 
 FxPresetEntry = tuple[FxName, FxBeatPeriod]
@@ -91,26 +86,3 @@ fx_presets: dict[str, FxPreset] = {
         (FxName.REVERB, FxBeatPeriod.ONE_QUARTER),
     ),
 }
-
-
-# def _validate_fx_presets(presets: dict[str, FxPreset]) -> None:
-#     for preset_name, preset_entries in presets.items():
-#         if len(preset_entries) != 3:
-#             raise ValueError(
-#                 f"Preset '{preset_name}' must contain exactly 3 FX entries."
-#             )
-
-#         for fx_name, fx_beat_period in preset_entries:
-#             if not isinstance(fx_name, FxName):
-#                 raise TypeError(
-#                     f"Preset '{preset_name}' has invalid fx_name type: "
-#                     f"{type(fx_name).__name__}."
-#                 )
-#             if not isinstance(fx_beat_period, FxBeatPeriod):
-#                 raise TypeError(
-#                     f"Preset '{preset_name}' has invalid fx_beat_period type: "
-#                     f"{type(fx_beat_period).__name__}."
-#                 )
-
-
-# _validate_fx_presets(fx_presets)
