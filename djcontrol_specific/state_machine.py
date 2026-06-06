@@ -3,7 +3,13 @@
 import mido
 import threading
 from .controller_notes import *
-from .fx_presets import fx_presets, FxName, FxBeatPeriod, available_fx
+from .fx_presets import (
+    fx_presets,
+    FxName,
+    FxBeatPeriod,
+    available_fx,
+    available_beat_periods_per_fx,
+)
 from helpers.midi_device_name import get_midi_device_name_matching_regex
 from .controller_notes import (
     PAD_1_NOTE_INT,
@@ -88,6 +94,8 @@ class FxSlot:
         self.beat_period = (
             beat_period if beat_period is not None else list(FxBeatPeriod)[0]
         )
+        self._beat_period_by_fx: dict[FxName, FxBeatPeriod] = {}
+        self._normalize_beat_period_for_current_fx()
         self._set_other_screen_then_base_screen_callback = (
             set_other_screen_then_base_screen_callback
         )
@@ -105,36 +113,75 @@ class FxSlot:
         self.is_active = not self.is_active
         return self.is_active
 
+    def _remember_current_beat_period(self):
+        beat_periods = available_beat_periods_per_fx.get(
+            self.fx_name, list(FxBeatPeriod)
+        )
+        if self.beat_period in beat_periods:
+            self._beat_period_by_fx[self.fx_name] = self.beat_period
+
+    def _normalize_beat_period_for_current_fx(self):
+        beat_periods = available_beat_periods_per_fx.get(
+            self.fx_name, list(FxBeatPeriod)
+        )
+        saved_beat = self._beat_period_by_fx.get(self.fx_name)
+        if saved_beat in beat_periods:
+            self.beat_period = saved_beat
+        elif self.beat_period not in beat_periods:
+            self.beat_period = beat_periods[0]
+        self._beat_period_by_fx[self.fx_name] = self.beat_period
+        return self.beat_period
+
     def up_one_effect(self):
         if self.fx_name not in available_fx:
             self.fx_name = available_fx[0]
+            self._normalize_beat_period_for_current_fx()
             return self.fx_name
+        self._remember_current_beat_period()
         current_index = available_fx.index(self.fx_name)
         next_index = (current_index + 1) % len(available_fx)
         self.fx_name = available_fx[next_index]
+        self._normalize_beat_period_for_current_fx()
         return self.fx_name
 
     def down_one_effect(self):
         if self.fx_name not in available_fx:
             self.fx_name = available_fx[-1]
+            self._normalize_beat_period_for_current_fx()
             return self.fx_name
+        self._remember_current_beat_period()
         current_index = available_fx.index(self.fx_name)
         previous_index = (current_index - 1) % len(available_fx)
         self.fx_name = available_fx[previous_index]
+        self._normalize_beat_period_for_current_fx()
         return self.fx_name
 
     def up_one_beat_period(self):
-        beat_periods = list(FxBeatPeriod)
+        beat_periods = available_beat_periods_per_fx.get(
+            self.fx_name, list(FxBeatPeriod)
+        )
+        if self.beat_period not in beat_periods:
+            self.beat_period = beat_periods[0]
+            self._beat_period_by_fx[self.fx_name] = self.beat_period
+            return self.beat_period
         current_index = beat_periods.index(self.beat_period)
-        next_index = (current_index + 1) % len(beat_periods)
+        next_index = min(current_index + 1, len(beat_periods) - 1)
         self.beat_period = beat_periods[next_index]
+        self._beat_period_by_fx[self.fx_name] = self.beat_period
         return self.beat_period
 
     def down_one_beat_period(self):
-        beat_periods = list(FxBeatPeriod)
+        beat_periods = available_beat_periods_per_fx.get(
+            self.fx_name, list(FxBeatPeriod)
+        )
+        if self.beat_period not in beat_periods:
+            self.beat_period = beat_periods[0]
+            self._beat_period_by_fx[self.fx_name] = self.beat_period
+            return self.beat_period
         current_index = beat_periods.index(self.beat_period)
-        previous_index = (current_index - 1) % len(beat_periods)
+        previous_index = max(current_index - 1, 0)
         self.beat_period = beat_periods[previous_index]
+        self._beat_period_by_fx[self.fx_name] = self.beat_period
         return self.beat_period
 
 
@@ -153,7 +200,7 @@ class StateMachine:
         self.pads_state = [True, False, False, False, False, True, False, False]
 
         self.fx1_effects = self.build_fx_slots_from_preset(fx_presets["preset_1"])
-        self.fx2_effects = self.build_fx_slots_from_preset(fx_presets["preset_1"])
+        self.fx2_effects = self.build_fx_slots_from_preset(fx_presets["preset_2"])
 
         self._base_screen_timer = None
         self._screen_message_queue = []
@@ -378,13 +425,13 @@ class StateMachine:
 
     def stepped_knob_turn_right(self, shift_mode: bool = False):
         if shift_mode:
-            pass
+            self._stepped_knob_turn(FxSlot.up_one_beat_period)
         else:
             self._stepped_knob_turn(FxSlot.up_one_effect)
 
     def stepped_knob_turn_left(self, shift_mode: bool = False):
         if shift_mode:
-            pass
+            self._stepped_knob_turn(FxSlot.down_one_beat_period)
         else:
             self._stepped_knob_turn(FxSlot.down_one_effect)
 

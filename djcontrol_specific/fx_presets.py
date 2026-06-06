@@ -68,6 +68,7 @@ def get_nb_of_steps_until_next_available_effect(
 
 
 class FxBeatPeriod(str, Enum):
+    ONE_SIXTEENTH = "1/16"
     ONE_EIGHTH = "1/8"
     ONE_QUARTER = "1/4"
     ONE_HALF = "1/2"
@@ -78,6 +79,71 @@ class FxBeatPeriod(str, Enum):
     EIGHT = "8"
     SIXTEEN = "16"
 
+    # Specific to reverb decay time, not related to beat period
+    ONE_PERCENT = "1%"
+    TEN_PERCENT = "10%"
+    TWENTY_FIVE_PERCENT = "25%"
+    FIFTY_PERCENT = "50%"
+    SEVENTY_FIVE_PERCENT = "75%"
+    NINETY_PERCENT = "90%"
+    ONE_HUNDRED_PERCENT = "100%"
+
+
+available_beat_periods_per_fx = {
+    FxName.DELAY: [
+        FxBeatPeriod.ONE_SIXTEENTH,
+        FxBeatPeriod.ONE_EIGHTH,
+        FxBeatPeriod.ONE_QUARTER,
+        FxBeatPeriod.ONE_HALF,
+        FxBeatPeriod.THREE_QUARTERS,
+        FxBeatPeriod.ONE,
+        FxBeatPeriod.TWO,
+        FxBeatPeriod.FOUR,
+        FxBeatPeriod.EIGHT,
+    ],
+    FxName.ECHO: [
+        FxBeatPeriod.ONE_SIXTEENTH,
+        FxBeatPeriod.ONE_EIGHTH,
+        FxBeatPeriod.ONE_QUARTER,
+        FxBeatPeriod.ONE_HALF,
+        FxBeatPeriod.THREE_QUARTERS,
+        FxBeatPeriod.ONE,
+        FxBeatPeriod.TWO,
+        FxBeatPeriod.FOUR,
+        FxBeatPeriod.EIGHT,
+    ],
+    FxName.REVERB: [
+        FxBeatPeriod.ONE_PERCENT,
+        FxBeatPeriod.TEN_PERCENT,
+        FxBeatPeriod.TWENTY_FIVE_PERCENT,
+        FxBeatPeriod.FIFTY_PERCENT,
+        FxBeatPeriod.SEVENTY_FIVE_PERCENT,
+        FxBeatPeriod.NINETY_PERCENT,
+        FxBeatPeriod.ONE_HUNDRED_PERCENT,
+    ],
+    FxName.TRANS: [
+        FxBeatPeriod.ONE_SIXTEENTH,
+        FxBeatPeriod.ONE_EIGHTH,
+        FxBeatPeriod.ONE_QUARTER,
+        FxBeatPeriod.ONE_HALF,
+        FxBeatPeriod.ONE,
+        FxBeatPeriod.TWO,
+        FxBeatPeriod.FOUR,
+        FxBeatPeriod.EIGHT,
+        FxBeatPeriod.SIXTEEN,
+    ],
+    FxName.ROLL: [
+        FxBeatPeriod.ONE_SIXTEENTH,
+        FxBeatPeriod.ONE_EIGHTH,
+        FxBeatPeriod.ONE_QUARTER,
+        FxBeatPeriod.ONE_HALF,
+        FxBeatPeriod.ONE,
+        FxBeatPeriod.TWO,
+        FxBeatPeriod.FOUR,
+        FxBeatPeriod.EIGHT,
+    ],
+}
+
 
 FxPresetEntry = tuple[FxName, FxBeatPeriod]
 FxPreset = tuple[FxPresetEntry, FxPresetEntry, FxPresetEntry]
@@ -85,8 +151,13 @@ FxPreset = tuple[FxPresetEntry, FxPresetEntry, FxPresetEntry]
 
 fx_presets: dict[str, FxPreset] = {
     "preset_1": (
-        (FxName.DELAY, FxBeatPeriod.ONE),
-        (FxName.ECHO, FxBeatPeriod.ONE_HALF),
-        (FxName.REVERB, FxBeatPeriod.ONE_QUARTER),
+        (FxName.TRANS, FxBeatPeriod.ONE),
+        (FxName.REVERB, FxBeatPeriod.FIFTY_PERCENT),
+        (FxName.ROLL, FxBeatPeriod.FOUR),
+    ),
+    "preset_2": (
+        (FxName.TRANS, FxBeatPeriod.ONE_HALF),
+        (FxName.ECHO, FxBeatPeriod.TWO),
+        (FxName.ROLL, FxBeatPeriod.EIGHT),
     ),
 }
