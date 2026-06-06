@@ -100,7 +100,7 @@ class FxSlot:
             set_other_screen_then_base_screen_callback
         )
 
-    def set_other_screen_then_base_screen(self, line1, line2, clear_pile: bool = False):
+    def set_other_screen_then_base_screen(self, line1, line2, clear_pile: bool = True):
         if self._set_other_screen_then_base_screen_callback is None:
             return
         self._set_other_screen_then_base_screen_callback(line1, line2, clear_pile)
