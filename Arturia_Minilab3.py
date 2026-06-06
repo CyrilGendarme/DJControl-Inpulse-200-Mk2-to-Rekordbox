@@ -2,20 +2,95 @@ from djcontrol_specific.state_machine import StateMachine
 import mido
 import traceback
 
-from functions.tempo_reverse import tempo_reverse
 from helpers.midi_device_name import get_midi_device_name_matching_regex
 from djcontrol_specific.controller_notes import (
-    SHIFT_NOTE_INT,
     SEMITONE_DOWN_NOTE_INT,
     SEMITONE_UP_NOTE_INT,
     FADERS_ISO_VOLUME_INT,
     STEPPED_KNOB_TURN_CONTROL_INT,
+    STEPPED_KNOB_TURN_CONTROL_INT_SHIFT,
     STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_1,
     STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_2,
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_1,
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
     SAMPLER_VOLUME_SWITCH,
 )
+from djcontrol_specific.fx_presets import (
+    get_nb_of_steps_until_next_available_effect,
+)
+
+RIGHT_TURN_VALUES = {
+    STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_1,
+    STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_2,
+}
+
+LEFT_TURN_VALUES = {
+    STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_1,
+    STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
+}
+
+
+def _send_fx_note_on(
+    virtual_outport, idx: int, note_offset: int, repeat_count: int = 1
+):
+    for _ in range(repeat_count):
+        msg = mido.Message(type="note_on", note=idx + 1 + note_offset)
+        virtual_outport.send(msg)
+
+
+def _handle_stepped_knob_turn(
+    ims, state_machine: StateMachine, virtual_outport, shift_mode: bool
+) -> bool:
+    active_fx_effects = state_machine.get_active_fx_effects()
+    all_fx_slots = state_machine.fx1_effects + state_machine.fx2_effects
+
+    if ims.value in RIGHT_TURN_VALUES:
+        turn_fn = state_machine.stepped_knob_turn_right
+        direction_name = "right"
+    elif ims.value in LEFT_TURN_VALUES:
+        turn_fn = state_machine.stepped_knob_turn_left
+        direction_name = "left"
+    else:
+        return False
+
+    backward = direction_name == "left"
+
+    # Snapshot effect names before mutating state; repeat_count must represent
+    # how many software steps are needed from the current effect to next allowed one.
+    fx_names_before_turn = [slot.fx_name for slot in all_fx_slots]
+    turn_fn(shift_mode=shift_mode)
+
+    note_offset = (80 if backward else 90) if shift_mode else (0 if backward else 30)
+
+    for idx, state in enumerate(active_fx_effects):
+        if not state:
+            continue
+
+        if shift_mode:
+            repeat_count = 1
+        else:
+            repeat_count = get_nb_of_steps_until_next_available_effect(
+                fx_names_before_turn[idx],
+                backward=backward,
+            )
+            print(
+                f"Stepped knob turn {direction_name}, effect {idx + 1} is active, sending {repeat_count} note_on messages for it"
+            )
+
+        _send_fx_note_on(virtual_outport, idx, note_offset, repeat_count)
+
+    return True
+
+
+def _forward_semitone_note_on(ims, state_machine: StateMachine, virtual_outport):
+    base_note = 10 if ims.note == SEMITONE_DOWN_NOTE_INT else 20
+    for idx, state in enumerate(state_machine.get_active_fx1_channels()):
+        if state:
+            msg = ims.copy(
+                note=base_note + idx + 1
+            )  # Map to a different note for each channel, matching midi_mappings/Minilab3.csv
+            virtual_outport.send(msg)
+
 
 def main():
     midi_inp_name = get_midi_device_name_matching_regex(
@@ -57,43 +132,20 @@ def main():
                                 virtual_outport.send(msg)
 
                     elif ims.control == STEPPED_KNOB_TURN_CONTROL_INT:
-                        active_fx_effects = state_machine.get_active_fx_effects()
+                        _handle_stepped_knob_turn(
+                            ims,
+                            state_machine,
+                            virtual_outport,
+                            shift_mode=False,
+                        )
 
-                        if ims.value in [
-                            STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_1,
-                            STEPPED_KNOB_TURN_RIGHT_CONTROL_VALUE_INT_2,
-                        ]:
-                            state_machine.stepped_knob_turn_right()
-
-                            for idx, state in enumerate(active_fx_effects):
-                                if state:
-                                    msg = mido.Message(
-                                        type="note_on",
-                                        # control=ims.control + 5 * idx,
-                                        note=idx + 1,
-                                    )
-                                    print(
-                                        f"Stepped knob turn right, sending note_on with note={msg.note} for effect {idx + 1}"
-                                    )
-                                    virtual_outport.send(msg)
-
-                        elif ims.value in [
-                            STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_1,
-                            STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
-                        ]:
-                            state_machine.stepped_knob_turn_left()
-
-                            for idx, state in enumerate(active_fx_effects):
-                                if state:
-                                    msg = mido.Message(
-                                        "note_on",
-                                        note=30 + idx + 1,
-                                        channel=ims.channel,
-                                    )
-                                    print(
-                                        f"Stepped knob turn left, sending note_on with note={msg.note} for effect {idx + 1}"
-                                    )
-                                    virtual_outport.send(msg)
+                    elif ims.control == STEPPED_KNOB_TURN_CONTROL_INT_SHIFT:
+                        _handle_stepped_knob_turn(
+                            ims,
+                            state_machine,
+                            virtual_outport,
+                            shift_mode=True,
+                        )
 
                     else:
                         virtual_outport.send(ims)
@@ -106,37 +158,7 @@ def main():
                         SEMITONE_DOWN_NOTE_INT,
                         SEMITONE_UP_NOTE_INT,
                     ]:
-
-                        if state_machine.shift_state:
-                            for idx, state in enumerate(
-                                state_machine.get_active_fx_effects()
-                            ):
-                                if state:
-                                    msg = ims.copy(
-                                        note=(
-                                            80
-                                            if ims.note == SEMITONE_DOWN_NOTE_INT
-                                            else 90
-                                        )
-                                        + idx
-                                        + 1
-                                    )  # Map to a different note for each effect, matching midi_mappings/Minilab3.csv
-                                    virtual_outport.send(msg)
-                        else:
-                            for idx, state in enumerate(
-                                state_machine.get_active_fx1_channels()
-                            ):
-                                if state:
-                                    msg = ims.copy(
-                                        note=(
-                                            10
-                                            if ims.note == SEMITONE_DOWN_NOTE_INT
-                                            else 20
-                                        )
-                                        + idx
-                                        + 1
-                                    )  # Map to a different note for each channel, matching midi_mappings/Minilab3.csv
-                                    virtual_outport.send(msg)
+                        _forward_semitone_note_on(ims, state_machine, virtual_outport)
                     elif ims.note == SAMPLER_VOLUME_SWITCH:
                         if state_machine.sampler_volume_on:
                             value = 127

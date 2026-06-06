@@ -38,6 +38,7 @@ class FxName(str, Enum):
     SPIRAL_DOWN = "SPIRAL DOWN"
     REVERB_DOWN = "REVERB DOWN"
 
+
 available_fx = [
     FxName.DELAY,
     FxName.ECHO,
@@ -47,7 +48,9 @@ available_fx = [
 ]
 
 
-def get_nb_of_steps_until_next_avaailalbe_effect(current_effect: FxName) -> int:
+def get_nb_of_steps_until_next_available_effect(
+    current_effect: FxName, backward: bool = False
+) -> int:
     all_fx = list(FxName)
 
     if current_effect not in all_fx:
@@ -56,7 +59,8 @@ def get_nb_of_steps_until_next_avaailalbe_effect(current_effect: FxName) -> int:
     current_index = all_fx.index(current_effect)
 
     for step in range(1, len(all_fx) + 1):
-        next_effect = all_fx[(current_index + step) % len(all_fx)]
+        direction = -step if backward else step
+        next_effect = all_fx[(current_index + direction) % len(all_fx)]
         if next_effect in available_fx:
             return step
 

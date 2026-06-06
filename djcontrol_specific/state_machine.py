@@ -376,11 +376,17 @@ class StateMachine:
         elif ims.type == "note_on" and ims.note in SAMPLES_NOTES:
             self.set_other_screen_then_base_screen(f"SAMPLE {ims.note - 52}", "")
 
-    def stepped_knob_turn_right(self):
-        self._stepped_knob_turn(FxSlot.up_one_effect)
+    def stepped_knob_turn_right(self, shift_mode: bool = False):
+        if shift_mode:
+            pass
+        else:
+            self._stepped_knob_turn(FxSlot.up_one_effect)
 
-    def stepped_knob_turn_left(self):
-        self._stepped_knob_turn(FxSlot.down_one_effect)
+    def stepped_knob_turn_left(self, shift_mode: bool = False):
+        if shift_mode:
+            pass
+        else:
+            self._stepped_knob_turn(FxSlot.down_one_effect)
 
     def _stepped_knob_turn(self, effect_change_method):
         for effect_index, fx_slot in enumerate(self.fx1_effects):
