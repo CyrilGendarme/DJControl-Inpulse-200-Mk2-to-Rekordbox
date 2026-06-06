@@ -52,7 +52,6 @@ def _apply_fx_presets_to_software():
                 )
                 for _ in range(step_count):
                     virtual_outport.send(mido.Message(type="note_on", note=select_note))
-                    time.sleep(0.1)
                 current_available_index = available_fx.index(current_effect)
                 next_available_index = (
                     (current_available_index - 1)
@@ -66,8 +65,9 @@ def _apply_fx_presets_to_software():
                 beat_up_steps = beat_periods.index(target_beat_period)
                 beat_up_note = idx + 1 + FX_BEAT_UP_NOTE_OFFSET
                 for _ in range(beat_up_steps):
-                    virtual_outport.send(mido.Message(type="note_on", note=beat_up_note))
-                    time.sleep(0.1)
+                    virtual_outport.send(
+                        mido.Message(type="note_on", note=beat_up_note)
+                    )
 
 def start_up_sequence():
     '''
@@ -105,5 +105,3 @@ def start_up_sequence():
     actions.ensure_delay_on_all_fx_slots()
     actions.initialize_fx_beat_periods_minimums()
     _apply_fx_presets_to_software()
-    
-    

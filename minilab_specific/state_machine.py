@@ -95,7 +95,7 @@ class FxSlot:
             beat_period if beat_period is not None else list(FxBeatPeriod)[0]
         )
         self._beat_period_by_fx: dict[FxName, FxBeatPeriod] = {}
-        self._normalize_beat_period_for_current_fx()
+        self._normalize_beat_period_for_current_fx(prefer_current_if_valid=True)
         self._set_other_screen_then_base_screen_callback = (
             set_other_screen_then_base_screen_callback
         )
@@ -120,14 +120,19 @@ class FxSlot:
         if self.beat_period in beat_periods:
             self._beat_period_by_fx[self.fx_name] = self.beat_period
 
-    def _normalize_beat_period_for_current_fx(self):
+    def _normalize_beat_period_for_current_fx(
+        self, prefer_current_if_valid: bool = False
+    ):
         beat_periods = available_beat_periods_per_fx.get(
             self.fx_name, list(FxBeatPeriod)
         )
         saved_beat = self._beat_period_by_fx.get(self.fx_name)
         if saved_beat in beat_periods:
             self.beat_period = saved_beat
-        elif self.beat_period not in beat_periods:
+        elif prefer_current_if_valid and self.beat_period in beat_periods:
+            pass
+        else:
+            # First time selecting this FX on this slot: start from that FX minimum.
             self.beat_period = beat_periods[0]
         self._beat_period_by_fx[self.fx_name] = self.beat_period
         return self.beat_period
@@ -228,12 +233,12 @@ class StateMachine:
         for fx_slot, (fx_name, beat_period) in zip(self.fx1_effects, fx_presets["preset_1"]):
             fx_slot.fx_name = fx_name
             fx_slot.beat_period = beat_period
-            fx_slot._normalize_beat_period_for_current_fx()
+            fx_slot._normalize_beat_period_for_current_fx(prefer_current_if_valid=True)
 
         for fx_slot, (fx_name, beat_period) in zip(self.fx2_effects, fx_presets["preset_2"]):
             fx_slot.fx_name = fx_name
             fx_slot.beat_period = beat_period
-            fx_slot._normalize_beat_period_for_current_fx()
+            fx_slot._normalize_beat_period_for_current_fx(prefer_current_if_valid=True)
 
     def switch_sampler_volume_on(self):
         self.sampler_volume_on = not self.sampler_volume_on
