@@ -201,6 +201,7 @@ class StateMachine:
 
         self.fx1_effects = self.build_fx_slots_from_preset(fx_presets["preset_1"])
         self.fx2_effects = self.build_fx_slots_from_preset(fx_presets["preset_2"])
+        self._apply_init_fx_presets()
 
         self._base_screen_timer = None
         self._screen_message_queue = []
@@ -222,6 +223,17 @@ class StateMachine:
             )
             for fx_name, beat_period in preset_entries
         ]
+
+    def _apply_init_fx_presets(self):
+        for fx_slot, (fx_name, beat_period) in zip(self.fx1_effects, fx_presets["preset_1"]):
+            fx_slot.fx_name = fx_name
+            fx_slot.beat_period = beat_period
+            fx_slot._normalize_beat_period_for_current_fx()
+
+        for fx_slot, (fx_name, beat_period) in zip(self.fx2_effects, fx_presets["preset_2"]):
+            fx_slot.fx_name = fx_name
+            fx_slot.beat_period = beat_period
+            fx_slot._normalize_beat_period_for_current_fx()
 
     def switch_sampler_volume_on(self):
         self.sampler_volume_on = not self.sampler_volume_on

@@ -1,9 +1,10 @@
-from djcontrol_specific.state_machine import StateMachine
+from minilab_specific.state_machine import StateMachine
 import mido
 import traceback
 
+from minilab_specific.start_up_sequence import start_up_sequence
 from helpers.midi_device_name import get_midi_device_name_matching_regex
-from djcontrol_specific.controller_notes import (
+from minilab_specific.controller_notes import (
     SEMITONE_DOWN_NOTE_INT,
     SEMITONE_UP_NOTE_INT,
     FADERS_ISO_VOLUME_INT,
@@ -15,7 +16,7 @@ from djcontrol_specific.controller_notes import (
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
     SAMPLER_VOLUME_SWITCH,
 )
-from djcontrol_specific.fx_presets import (
+from minilab_specific.fx_presets import (
     get_nb_of_steps_until_next_available_effect,
 )
 
@@ -28,6 +29,10 @@ LEFT_TURN_VALUES = {
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_1,
     STEPPED_KNOB_TURN_LEFT_CONTROL_VALUE_INT_2,
 }
+
+FX_SELECT_FORWARD_NOTE_OFFSET = 30
+FX_SELECT_BACK_NOTE_OFFSET = 0
+FX_BEAT_UP_NOTE_OFFSET = 90
 
 
 def _send_fx_note_on(
@@ -60,7 +65,11 @@ def _handle_stepped_knob_turn(
     fx_names_before_turn = [slot.fx_name for slot in all_fx_slots]
     turn_fn(shift_mode=shift_mode)
 
-    note_offset = (80 if backward else 90) if shift_mode else (0 if backward else 30)
+    note_offset = (
+        (80 if backward else 90)
+        if shift_mode
+        else (FX_SELECT_BACK_NOTE_OFFSET if backward else FX_SELECT_FORWARD_NOTE_OFFSET)
+    )
 
     for idx, state in enumerate(active_fx_effects):
         if not state:
@@ -184,4 +193,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    start_up_sequence()
+    # main()

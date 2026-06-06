@@ -116,3 +116,28 @@ def wait_for_rekordbox(timeout=60):
             return True
         time.sleep(1)
     return False
+
+
+def wait_for_rekordbox_ready(timeout=90):
+    """
+    Wait until Rekordbox is both running and has a usable main window.
+    Returns True when the window can be found and focused.
+    """
+    start = time.time()
+
+    if not wait_for_rekordbox(timeout=timeout):
+        return False
+
+    elapsed = time.time() - start
+    remaining_timeout = max(0, int(timeout - elapsed))
+    win = _find_rekordbox_window(timeout=remaining_timeout)
+    if not win:
+        return False
+
+    try:
+        focus_rekordbox_window()
+        time.sleep(0.3)
+    except Exception:
+        return False
+
+    return True
