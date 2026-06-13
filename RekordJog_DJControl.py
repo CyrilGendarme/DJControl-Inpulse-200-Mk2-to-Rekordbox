@@ -63,8 +63,6 @@ def main():
 
                 state_machine.ims_to_lights_playback(ims)
 
-                print(f"Received MIDI message: {ims}")
-
                 if ims.type == "control_change":
                     if ims.control == JOG_SIDE_CODE or ims.control == JOG_TOP_CODE:
                         wheel_messages_counter = jog_incremental(
