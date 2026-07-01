@@ -65,16 +65,20 @@ class StateMachine:
         set_sync_light(1, SYNC_NOTE, self.deck13, self.outport_lights)
         if self.deck13:
             self.channel_3.set_all_lights_playback()
+            self.channel_3.set_all_knobs_and_faders_desactivated()
         else:
             self.channel_1.set_all_lights_playback()
+            self.channel_1.set_all_knobs_and_faders_desactivated()
 
     def switch_deck24(self):
         self.deck24 = not self.deck24
         set_sync_light(2, SYNC_NOTE, self.deck24, self.outport_lights)
         if self.deck24:
             self.channel_4.set_all_lights_playback()
+            self.channel_4.set_all_knobs_and_faders_desactivated()
         else:
             self.channel_2.set_all_lights_playback()
+            self.channel_2.set_all_knobs_and_faders_desactivated()
 
     def _get_channel_state(self, channel):
         if channel in [1, 4, 6]:
@@ -103,74 +107,93 @@ class StateMachine:
         self.master_pressed = pressed
         # set_sync_light(0, MASTER_NOTE, pressed, self.outport_lights)
         set_sync_light(0, MASTER_NOTE, False, self.outport_lights)
+        
+    def is_knobs_and_faders_desactivated(self, channel, control):
+        channel_state = self._get_channel_state(channel)
+        if channel_state is None:
+            return False
+        return channel_state.knobs_and_faders_desactivated.get(control)
 
     def ims_to_lights_playback(self, ims):
-        if ims.type != "note_on":
-            return
 
-        channel_state = self._get_channel_state(ims.channel)
-        if channel_state is None:
-            if ims.note == ASSIST_PREP_NOTE:
-                self.set_assist_prep_pressed_state(ims.velocity > 0)
-            if ims.note == MASTER_NOTE:
-                self.set_master_pressed_state(ims.velocity > 0)
-            return
+        if ims.type == "control_change":
+            if ims.note in [
+                EQ_HIGH_NOTE,
+                EQ_MID_NOTE,
+                EQ_LOW_NOTE,
+                CHANNEL_FADER_NOTE,
+                CFX_NOTE,
+            ]:
+                channel_state = self._get_channel_state(ims.channel)
+                channel_state.set_knobs_and_faders_value(ims.note, ims.value)
 
-        pressed = ims.velocity > 0
+        elif ims.type == "note_on":
+            channel_state = self._get_channel_state(ims.channel)
 
-        if ims.note == LOAD_NOTE and pressed:
-            channel_state.reset_lights_playback_after_track_load()
-        elif ims.note == HOT_CUE_MODE_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.switch_mode_to_hot_cue()
-        elif ims.note == STEMS_MODE_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.switch_mode_to_stems()
-        elif ims.note == PLAYPAUSE_NOTE and pressed:
-            channel_state.set_play_active(not channel_state.play_active)
-        elif ims.note == HEADPHONE_CUE_NOTE and pressed:
-            channel_state.set_headphone_cue_active(
-                not channel_state.headphone_cue_active
-            )
-        elif ims.note == LOOP_NOTE and pressed and self._is_channel_main(ims):
-            channel_state.set_loop_active(True)
-        elif ims.note == LOOP_NOTE and pressed and not self._is_channel_main(ims):
-            channel_state.set_loop_active(False)
+            if channel_state is None:
+                if ims.note == ASSIST_PREP_NOTE:
+                    self.set_assist_prep_pressed_state(ims.velocity > 0)
+                if ims.note == MASTER_NOTE:
+                    self.set_master_pressed_state(ims.velocity > 0)
+                return
 
-        elif ims.note == FX_VOCAL_NOTE and pressed:
-            self.vocal_fx_active = not self.vocal_fx_active
-            self.set_fx_part_light_playback(FX_VOCAL_NOTE, self.vocal_fx_active)
-        elif ims.note == FX_INST_NOTE and pressed:
-            self.inst_fx_active = not self.inst_fx_active
-            self.set_fx_part_light_playback(FX_INST_NOTE, self.inst_fx_active)
-            if self.inst_bass_parts_merged:
-                self.bass_fx_active = self.inst_fx_active
+            pressed = ims.velocity > 0
+
+            if ims.note == LOAD_NOTE and pressed:
+                channel_state.reset_lights_playback_after_track_load()
+            elif (
+                ims.note == HOT_CUE_MODE_NOTE and pressed and self._is_channel_main(ims)
+            ):
+                channel_state.switch_mode_to_hot_cue()
+            elif ims.note == STEMS_MODE_NOTE and pressed and self._is_channel_main(ims):
+                channel_state.switch_mode_to_stems()
+            elif ims.note == PLAYPAUSE_NOTE and pressed:
+                channel_state.set_play_active(not channel_state.play_active)
+            elif ims.note == HEADPHONE_CUE_NOTE and pressed:
+                channel_state.set_headphone_cue_active(
+                    not channel_state.headphone_cue_active
+                )
+            elif ims.note == LOOP_NOTE and pressed and self._is_channel_main(ims):
+                channel_state.set_loop_active(True)
+            elif ims.note == LOOP_NOTE and pressed and not self._is_channel_main(ims):
+                channel_state.set_loop_active(False)
+
+            elif ims.note == FX_VOCAL_NOTE and pressed:
+                self.vocal_fx_active = not self.vocal_fx_active
+                self.set_fx_part_light_playback(FX_VOCAL_NOTE, self.vocal_fx_active)
+            elif ims.note == FX_INST_NOTE and pressed:
+                self.inst_fx_active = not self.inst_fx_active
+                self.set_fx_part_light_playback(FX_INST_NOTE, self.inst_fx_active)
+                if self.inst_bass_parts_merged:
+                    self.bass_fx_active = self.inst_fx_active
+                    self.set_fx_part_light_playback(FX_BASS_NOTE, self.bass_fx_active)
+            elif ims.note == FX_BASS_NOTE and pressed:
+                self.bass_fx_active = not self.bass_fx_active
                 self.set_fx_part_light_playback(FX_BASS_NOTE, self.bass_fx_active)
-        elif ims.note == FX_BASS_NOTE and pressed:
-            self.bass_fx_active = not self.bass_fx_active
-            self.set_fx_part_light_playback(FX_BASS_NOTE, self.bass_fx_active)
-            if self.inst_bass_parts_merged:
-                self.inst_fx_active = self.bass_fx_active
-                self.set_fx_part_light_playback(FX_INST_NOTE, self.bass_fx_active)
-        elif ims.note == FX_DRUMS_NOTE and pressed:
-            self.drums_fx_active = not self.drums_fx_active
-            self.set_fx_part_light_playback(FX_DRUMS_NOTE, self.drums_fx_active)
+                if self.inst_bass_parts_merged:
+                    self.inst_fx_active = self.bass_fx_active
+                    self.set_fx_part_light_playback(FX_INST_NOTE, self.bass_fx_active)
+            elif ims.note == FX_DRUMS_NOTE and pressed:
+                self.drums_fx_active = not self.drums_fx_active
+                self.set_fx_part_light_playback(FX_DRUMS_NOTE, self.drums_fx_active)
 
-        if not self.assist_prep_pressed:
-            if ims.note == VOCAL_PART_NOTE and pressed:
-                channel_state.set_music_part_active(
-                    "vocal", not channel_state.vocal_active
-                )
-            elif ims.note == INST_PART_NOTE and pressed:
-                channel_state.set_music_part_active(
-                    "inst", not channel_state.inst_active
-                )
-            elif ims.note == BASS_PART_NOTE and pressed:
-                channel_state.set_music_part_active(
-                    "bass", not channel_state.bass_active
-                )
-            elif ims.note == DRUMS_PART_NOTE and pressed:
-                channel_state.set_music_part_active(
-                    "drums", not channel_state.drums_active
-                )
+            if not self.assist_prep_pressed:
+                if ims.note == VOCAL_PART_NOTE and pressed:
+                    channel_state.set_music_part_active(
+                        "vocal", not channel_state.vocal_active
+                    )
+                elif ims.note == INST_PART_NOTE and pressed:
+                    channel_state.set_music_part_active(
+                        "inst", not channel_state.inst_active
+                    )
+                elif ims.note == BASS_PART_NOTE and pressed:
+                    channel_state.set_music_part_active(
+                        "bass", not channel_state.bass_active
+                    )
+                elif ims.note == DRUMS_PART_NOTE and pressed:
+                    channel_state.set_music_part_active(
+                        "drums", not channel_state.drums_active
+                    )
 
 
 class ChannelState:
@@ -190,6 +213,20 @@ class ChannelState:
         self.drums_active = True
         self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
         self.set_all_lights_playback()
+        self.knobs_and_faders_value = {
+            EQ_HIGH_NOTE: 127,
+            EQ_MID_NOTE: 127,
+            EQ_LOW_NOTE: 127,
+            CHANNEL_FADER_NOTE: 127,
+            CFX_NOTE: 127,
+        }
+        self.knobs_and_faders_desactivated = {
+            EQ_HIGH_NOTE: True,
+            EQ_MID_NOTE: True,
+            EQ_LOW_NOTE: True,
+            CHANNEL_FADER_NOTE: True,
+            CFX_NOTE: True,
+        }
 
     def switch_mode_to_hot_cue(self):
         self.hot_cue_mode = True
@@ -289,3 +326,26 @@ class ChannelState:
         self.set_music_part_active("inst", True)
         self.set_music_part_active("bass", True)
         self.set_music_part_active("drums", True)
+
+    def set_knobs_and_faders_value(self, control, value) -> None:
+        # If channel not desactivated, update the value and return
+        if not self.knobs_and_faders_desactivated.get(control):
+            self.knobs_and_faders_value[control] = value
+            return
+
+        # Otherwise, drop the value if not close to the previous one, otherwise update the value and desactivated state
+        if self.is_knobs_and_faders_value_close_from_previous_one(control, value):
+            self.knobs_and_faders_desactivated[control] = False
+            self.knobs_and_faders_value[control] = value
+
+    def set_all_knobs_and_faders_desactivated(self) -> None:
+        for control in self.knobs_and_faders_desactivated.keys():
+            self.knobs_and_faders_desactivated[control] = True
+
+    def is_knobs_and_faders_value_close_from_previous_one(
+        self, control, value, threshold=5
+    ) -> bool:
+        previous_value = self.knobs_and_faders_value.get(control)
+        if previous_value is None:
+            return False
+        return abs(previous_value - value) <= threshold

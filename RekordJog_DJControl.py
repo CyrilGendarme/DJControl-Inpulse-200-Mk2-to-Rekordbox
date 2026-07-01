@@ -14,6 +14,11 @@ from djcontrol_specific.controller_notes import (
     PAD_NOTES_LEFT,
     PAD_NOTES_RIGHT,
     PAD_NOTES,
+    EQ_HIGH_NOTE,
+    EQ_MID_NOTE,
+    EQ_LOW_NOTE,
+    CHANNEL_FADER_NOTE,
+    CFX_NOTE,
 )
 
 def main():
@@ -70,6 +75,11 @@ def main():
                             outport,
                             wheel_messages_counter,
                         )
+                    elif ims.control in [EQ_HIGH_NOTE, EQ_MID_NOTE, EQ_LOW_NOTE, CHANNEL_FADER_NOTE, CFX_NOTE]:
+                        if state_machine.is_knobs_and_faders_desactivated(msg.channel, msg.control):
+                            # If the knob or fader is deactivated, ignore the command
+                            continue
+                        
                     else:
                         outport.send(msg)
 
