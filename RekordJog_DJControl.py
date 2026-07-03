@@ -75,12 +75,13 @@ def main():
                             outport,
                             wheel_messages_counter,
                         )
-                    elif ims.control in [EQ_HIGH_NOTE, EQ_MID_NOTE, EQ_LOW_NOTE, CHANNEL_FADER_NOTE, CFX_NOTE]:
+                    elif msg.control in [EQ_HIGH_NOTE, EQ_MID_NOTE, EQ_LOW_NOTE, CHANNEL_FADER_NOTE, CFX_NOTE] and not msg.channel == 0:
                         if state_machine.is_knobs_and_faders_desactivated(msg.channel, msg.control):
                             # If the knob or fader is deactivated, ignore the command
                             continue
                         
                     else:
+                        print(f"SEND control change for channel {ims.channel}, control {ims.control}, value {ims.value}")
                         outport.send(msg)
 
                     tempo_reverse(msg, outport)
@@ -96,6 +97,7 @@ def main():
                         elif msg.note in PAD_NOTES_RIGHT:
                             msg.note = 21
 
+                    print(f"SEND note message for channel {ims.channel}, note {msg.note}, velocity {msg.velocity}")
                     outport.send(msg)
 
     except KeyboardInterrupt:

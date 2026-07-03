@@ -117,15 +117,17 @@ class StateMachine:
     def ims_to_lights_playback(self, ims):
 
         if ims.type == "control_change":
-            if ims.note in [
+            if ims.control in [
                 EQ_HIGH_NOTE,
                 EQ_MID_NOTE,
                 EQ_LOW_NOTE,
                 CHANNEL_FADER_NOTE,
                 CFX_NOTE,
             ]:
+                # print(f"Received control change for channel {ims.channel}, control {ims.control}, value {ims.value}")
                 channel_state = self._get_channel_state(ims.channel)
-                channel_state.set_knobs_and_faders_value(ims.note, ims.value)
+                if (channel_state is not None):
+                    channel_state.set_knobs_and_faders_value(ims.control, ims.value)
 
         elif ims.type == "note_on":
             channel_state = self._get_channel_state(ims.channel)
@@ -214,11 +216,11 @@ class ChannelState:
         self.inst_bass_parts_merged = INST_BASS_PARTS_MERGED
         self.set_all_lights_playback()
         self.knobs_and_faders_value = {
-            EQ_HIGH_NOTE: 127,
-            EQ_MID_NOTE: 127,
-            EQ_LOW_NOTE: 127,
+            EQ_HIGH_NOTE: 64,
+            EQ_MID_NOTE: 64,
+            EQ_LOW_NOTE: 64,
             CHANNEL_FADER_NOTE: 127,
-            CFX_NOTE: 127,
+            CFX_NOTE: 64,
         }
         self.knobs_and_faders_desactivated = {
             EQ_HIGH_NOTE: True,
@@ -330,11 +332,13 @@ class ChannelState:
     def set_knobs_and_faders_value(self, control, value) -> None:
         # If channel not desactivated, update the value and return
         if not self.knobs_and_faders_desactivated.get(control):
+            print(f"Updating value for control {control} to {value}")
             self.knobs_and_faders_value[control] = value
             return
 
         # Otherwise, drop the value if not close to the previous one, otherwise update the value and desactivated state
         if self.is_knobs_and_faders_value_close_from_previous_one(control, value):
+            print(f"Control {control} value {value} is close to previous value, updating and activating control")
             self.knobs_and_faders_desactivated[control] = False
             self.knobs_and_faders_value[control] = value
 
